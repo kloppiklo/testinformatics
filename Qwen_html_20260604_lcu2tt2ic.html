@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Кодирование текста: Интерактивный тест</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --error: #ef4444;
+            --bg: #f0f4f8;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text);
+        }
+
+        .container {
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 500px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .task-counter {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .question {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .hint {
+            background: #eef2ff;
+            border-left: 4px solid var(--primary);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            position: relative;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:hover {
+            border-color: var(--primary);
+            background: #f8fafc;
+        }
+
+        .btn.correct {
+            background: #d1fae5;
+            border-color: var(--success);
+            color: #065f46;
+        }
+
+        .btn.wrong {
+            background: #fee2e2;
+            border-color: var(--error);
+            color: #991b1b;
+            animation: shake 0.4s ease;
+        }
+
+        .btn.next-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .btn.next-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Ordering Task Styles */
+        .order-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            min-height: 50px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 2px dashed #cbd5e1;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .order-chip {
+            padding: 10px 16px;
+            background: var(--primary);
+            color: white;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            animation: popIn 0.3s ease;
+        }
+
+        .pool-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .pool-chip {
+            padding: 10px 16px;
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pool-chip:active {
+            transform: scale(0.95);
+        }
+
+        .pool-chip.used {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* Result Screen */
+        .result-screen {
+            text-align: center;
+            display: none;
+        }
+
+        .result-emoji {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .result-score {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            margin-bottom: 24px;
+        }
+
+        .feedback-text {
+            margin-top: 12px;
+            font-size: 0.95rem;
+            color: var(--text-light);
+            font-style: italic;
+            min-height: 24px;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>💻 Кодирование текста</h1>
+        <div class="task-counter">Задание <span id="currentTask">1</span> из 5</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+    </div>
+
+    <div id="gameArea">
+        <div class="hint" id="hintBox"></div>
+        <div class="question" id="questionText"></div>
+        
+        <div id="choicesArea" class="options"></div>
+        
+        <div id="orderArea" class="hidden">
+            <div style="text-align: center; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-light);">Нажимай на элементы в правильном порядке:</div>
+            <div class="order-area" id="selectedOrder"></div>
+            <div class="pool-area" id="poolOrder"></div>
+        </div>
+
+        <div class="feedback-text" id="feedbackText"></div>
+        <button class="btn next-btn" id="nextBtn" onclick="nextTask()">Далее ➡️</button>
+    </div>
+
+    <div class="result-screen" id="resultScreen">
+        <div class="result-emoji" id="resultEmoji">🎉</div>
+        <div class="result-title" id="resultTitle">Отличная работа!</div>
+        <div class="result-score" id="resultScore">Твой результат: 5 из 5</div>
+        <button class="btn next-btn" style="display: block;" onclick="restartGame()">Пройти ещё раз 🔄</button>
+    </div>
+</div>
+
+<script>
+    const tasks = [
+        {
+            type: 'choice',
+            hint: '💡 Подсказка: 1 байт = 8 бит. Умножь количество символов на 8.',
+            question: 'Слово «КОД» состоит из 3 букв. Сколько бит информации оно содержит, если каждый символ кодируется 1 байтом?',
+            options: ['3 бита', '8 бит', '24 бита', '3 байта'],
+            correct: 2,
+            feedback: 'Верно! 3 символа × 8 бит = 24 бита.'
+        },
+        {
+            type: 'choice',
+            hint: '💡 Подсказка: Замени каждую пару цифр на букву по таблице: А=00, Б=01, В=10, Г=11.',
+            question: 'Расшифруй сообщение: <b>10 00 01 00</b>',
+            options: ['ГАБА', 'ВАБА', 'ВАВГ', 'БАВА'],
+            correct: 1,
+            feedback: 'Отлично! 10=В, 00=А, 01=Б, 00=А → ВАБА.'
+        },
+        {
+            type: 'choice',
+            hint: '💡 Подсказка: В кодировке Unicode (16 бит) на 1 символ уходит 2 байта. Но здесь вопрос про обратное действие.',
+            question: 'Текстовый файл занимает 500 байт в кодировке, где 1 символ = 1 байт. Сколько символов в этом тексте?',
+            options: ['500', '4000', '62', '1000'],
+            correct: 0,
+            feedback: 'Правильно! Если 1 символ = 1 байт, то 500 байт = 500 символов.'
+        },
+        {
+            type: 'order',
+            hint: '💡 Подсказка: Начни с самой маленькой единицы измерения информации.',
+            question: 'Расставь единицы измерения информации по возрастанию:',
+            items: ['бит', 'байт', 'Кбайт', 'Мбайт', 'Гбайт'],
+            feedback: 'Супер! Именно так они и располагаются: бит → байт → Кбайт → Мбайт → Гбайт.'
+        },
+        {
+            type: 'choice',
+            hint: '💡 Подсказка: Сдвиг на 1 букву вперед означает, что для расшифровки нужно сделать шаг назад по алфавиту (Р→П, С→Р и т.д.).',
+            question: 'Друг зашифровал слово шифром Цезаря со сдвигом +1 (А→Б, Б→В). Расшифруй: <b>«РСЙГЁУ»</b>',
+            options: ['ПОКА', 'ПРИВЕТ', 'УРОК', 'ЗАДАЧА'],
+            correct: 1,
+            feedback: 'Гениально! Р-1=П, С-1=Р, Й-1=И, Г-1=В, Ё-1=Е, У-1=Т → ПРИВЕТ.'
+        }
+    ];
+
+    let currentTaskIndex = 0;
+    let score = 0;
+    let currentOrder = [];
+    let isTaskCompleted = false;
+
+    function init() {
+        currentTaskIndex = 0;
+        score = 0;
+        document.getElementById('resultScreen').style.display = 'none';
+        document.getElementById('gameArea').style.display = 'block';
+        renderTask();
+    }
+
+    function renderTask() {
+        isTaskCompleted = false;
+        currentOrder = [];
+        const task = tasks[currentTaskIndex];
+        
+        document.getElementById('currentTask').textContent = currentTaskIndex + 1;
+        document.getElementById('progressBar').style.width = ((currentTaskIndex) / 5 * 100) + '%';
+        document.getElementById('hintBox').textContent = task.hint;
+        document.getElementById('questionText').innerHTML = task.question;
+        document.getElementById('feedbackText').textContent = '';
+        document.getElementById('nextBtn').style.display = 'none';
+
+        const choicesArea = document.getElementById('choicesArea');
+        const orderArea = document.getElementById('orderArea');
+        
+        choicesArea.innerHTML = '';
+        document.getElementById('selectedOrder').innerHTML = '';
+        document.getElementById('poolOrder').innerHTML = '';
+
+        if (task.type === 'choice') {
+            choicesArea.classList.remove('hidden');
+            orderArea.classList.add('hidden');
+            
+            task.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.textContent = opt;
+                btn.onclick = () => checkChoice(index, btn);
+                choicesArea.appendChild(btn);
+            });
+        } else if (task.type === 'order') {
+            choicesArea.classList.add('hidden');
+            orderArea.classList.remove('hidden');
+            
+            // Shuffle items for pool
+            const shuffled = [...task.items].sort(() => Math.random() - 0.5);
+            shuffled.forEach(item => {
+                const chip = document.createElement('div');
+                chip.className = 'pool-chip';
+                chip.textContent = item;
+                chip.onclick = () => addToOrder(item, chip);
+                document.getElementById('poolOrder').appendChild(chip);
+            });
+        }
+    }
+
+    function checkChoice(selectedIndex, btnElement) {
+        if (isTaskCompleted) return;
+        
+        const task = tasks[currentTaskIndex];
+        const buttons = document.querySelectorAll('#choicesArea .btn');
+        
+        if (selectedIndex === task.correct) {
+            isTaskCompleted = true;
+            score++;
+            btnElement.classList.add('correct');
+            document.getElementById('feedbackText').textContent = '✅ ' + task.feedback;
+            document.getElementById('feedbackText').style.color = 'var(--success)';
+            document.getElementById('nextBtn').style.display = 'block';
+            
+            buttons.forEach((btn, idx) => {
+                if (idx !== selectedIndex) btn.style.opacity = '0.5';
+                btn.style.pointerEvents = 'none';
+            });
+        } else {
+            btnElement.classList.add('wrong');
+            document.getElementById('feedbackText').textContent = '❌ Попробуй ещё раз!';
+            document.getElementById('feedbackText').style.color = 'var(--error)';
+            setTimeout(() => {
+                btnElement.classList.remove('wrong');
+            }, 500);
+        }
+    }
+
+    function addToOrder(item, chipElement) {
+        if (isTaskCompleted) return;
+        
+        currentOrder.push(item);
+        chipElement.classList.add('used');
+        
+        const selectedArea = document.getElementById('selectedOrder');
+        const selectedChip = document.createElement('div');
+        selectedChip.className = 'order-chip';
+        selectedChip.textContent = item;
+        selectedChip.onclick = () => removeFromOrder(item, selectedChip, chipElement);
+        selectedArea.appendChild(selectedChip);
+
+        const task = tasks[currentTaskIndex];
+        if (currentOrder.length === task.items.length) {
+            checkOrder();
+        }
+    }
+
+    function removeFromOrder(item, selectedChip, poolChip) {
+        if (isTaskCompleted) return;
+        
+        currentOrder.pop();
+        selectedChip.remove();
+        poolChip.classList.remove('used');
+        document.getElementById('feedbackText').textContent = '';
+    }
+
+    function checkOrder() {
+        const task = tasks[currentTaskIndex];
+        const isCorrect = JSON.stringify(currentOrder) === JSON.stringify(task.items);
+        
+        if (isCorrect) {
+            isTaskCompleted = true;
+            score++;
+            document.getElementById('feedbackText').textContent = '✅ ' + task.feedback;
+            document.getElementById('feedbackText').style.color = 'var(--success)';
+            document.getElementById('nextBtn').style.display = 'block';
+        } else {
+            document.getElementById('feedbackText').textContent = '❌ Порядок неверный. Нажми на элементы в верхней рамке, чтобы убрать их, и попробуй снова.';
+            document.getElementById('feedbackText').style.color = 'var(--error)';
+            
+            // Shake animation for visual feedback
+            const area = document.getElementById('selectedOrder');
+            area.style.animation = 'shake 0.4s ease';
+            setTimeout(() => {
+                area.style.animation = '';
+            }, 400);
+        }
+    }
+
+    function nextTask() {
+        currentTaskIndex++;
+        if (currentTaskIndex < tasks.length) {
+            renderTask();
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        document.getElementById('gameArea').style.display = 'none';
+        document.getElementById('resultScreen').style.display = 'block';
+        document.getElementById('progressBar').style.width = '100%';
+        
+        const percentage = (score / 5) * 100;
+        document.getElementById('resultScore').textContent = `Твой результат: ${score} из 5 (${percentage}%)`;
+        
+        if (score === 5) {
+            document.getElementById('resultEmoji').textContent = '🏆';
+            document.getElementById('resultTitle').textContent = 'Великолепно! Ты настоящий хакер!';
+        } else if (score >= 3) {
+            document.getElementById('resultEmoji').textContent = '👍';
+            document.getElementById('resultTitle').textContent = 'Хороший результат!';
+        } else {
+            document.getElementById('resultEmoji').textContent = '📚';
+            document.getElementById('resultTitle').textContent = 'Стоит повторить тему';
+        }
+    }
+
+    function restartGame() {
+        init();
+    }
+
+    // Start the game
+    init();
+</script>
+
+</body>
+</html>
